@@ -38,6 +38,12 @@ function shortDate(iso: string): { weekday: string; date: string; day: string } 
   };
 }
 
+function initialTheme(): "light" | "dark" {
+  const stored = localStorage.getItem("lane-theme");
+  if (stored === "light" || stored === "dark") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 function showDetailTitle(instructor: InstructorRow, windowTotal: number, days: number): string {
   const areas = instructor.areas.length > 0 ? `Areas: ${instructor.areas.join(", ")}` : "";
   return [areas, `${windowTotal} free slots across ${days} days`].filter(Boolean).join(" · ");
@@ -260,6 +266,8 @@ export default function App() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [sort, setSort] = useState<SortKey>("freeDesc");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [theme, setTheme] = useState<"light" | "dark">(initialTheme);
+  const [helpOpen, setHelpOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const config = data?.config ?? null;
@@ -301,6 +309,24 @@ export default function App() {
   const selectedDate = visibleDates[safeDateIndex] ?? null;
 
   useOutsideClick(searchRef, () => setSearchOpen(false));
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("lane-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (!helpOpen) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setHelpOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [helpOpen]);
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
@@ -642,6 +668,24 @@ export default function App() {
                 </ul>
               )}
               </div>
+              <button
+                type="button"
+                className="cal-btn icon-btn"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                aria-label="Toggle dark theme"
+                title="Toggle dark theme"
+              >
+                {theme === "dark" ? "☀" : "☾"}
+              </button>
+              <button
+                type="button"
+                className="cal-btn icon-btn"
+                onClick={() => setHelpOpen(true)}
+                aria-label="Help"
+                title="How to use this dashboard"
+              >
+                ?
+              </button>
             </div>
           </div>
         </header>
@@ -720,6 +764,103 @@ selectedDate={selectedDate}
           Refresh
         </button>
       </footer>
+
+      {helpOpen && (
+        <div className="modal-backdrop" onClick={() => setHelpOpen(false)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="How to use this dashboard"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2>How to use this dashboard</h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setHelpOpen(false)}
+                aria-label="Close help"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="help-section">
+              <h3>What this page shows</h3>
+              <p>
+                Live availability from the sales database: which of {rows.length} active
+                instructors can take a new learner in each 30-minute slot, across {dates.length} days
+                from {fromLabel.weekday} {fromLabel.date}.
+              </p>
+            </div>
+
+            <div className="help-section">
+              <h3>Pick a month</h3>
+              <ul>
+                <li>Use the ‹ and › arrows beside the month name to step one month at a time.</li>
+                <li>The month selector on the right jumps straight to any visible month.</li>
+                <li>The arrows stop at the start and end of the window.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Pick a date</h3>
+              <ul>
+                <li>Each tab is one date: weekday, day number, and total free slots for that day.</li>
+                <li>Click a tab to view that date. The active day shows a blue circle.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Filter the instructor list</h3>
+              <ul>
+                <li>The Filter select reorders instructors using the selected date.</li>
+                <li>Most free slots first, least free slots first, or alphabetical A to Z.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Search and compare instructors</h3>
+              <ul>
+                <li>Type a name to search; results drop down below the field.</li>
+                <li>Click + Compare (or press Enter for the top result) to pin an instructor.</li>
+                <li>While comparing, the grid shows only the pinned instructors.</li>
+                <li>Remove one with the small ×, or reset with Clear selection.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Read the grid</h3>
+              <ul>
+                <li>Columns are 30-minute slots; rows are instructors.</li>
+                <li>Green means the slot is free: no class, no time off, and enough travel time.</li>
+                <li>Click any slot to open details: Free, Booked class, Payment pending, Paused,
+                  Unavailable or Busy.</li>
+                <li>Booked slots show the learner, area and course when known.</li>
+                <li>A {config.instructor_gap_minutes}-minute travel gap around classes is applied, so
+                  green slots are safe to assign.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Expand one instructor</h3>
+              <ul>
+                <li>Click the ▸ arrow next to a name to open the day-by-day timetable.</li>
+                <li>Each day shows the free-slot count; the highlighted row is the selected date.</li>
+              </ul>
+            </div>
+
+            <div className="help-section">
+              <h3>Refresh and legend</h3>
+              <ul>
+                <li>Bottom-right Refresh fetches the latest data.</li>
+                <li>The legend explains the slot colors used in the grid.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

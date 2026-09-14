@@ -1,5 +1,4 @@
 :root {
-  color-scheme: light;
   font-family: Roboto, "Segoe UI", Arial, sans-serif;
 }
 
@@ -9,8 +8,8 @@
 
 body {
   margin: 0;
-  background: #fff;
-  color: #202124;
+  background: var(--gc-bg);
+  color: var(--gc-text);
   -webkit-font-smoothing: antialiased;
 }
 
