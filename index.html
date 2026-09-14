@@ -8,14 +8,7 @@
     <script>
       try {
         var t = localStorage.getItem("lane-theme");
-        document.documentElement.setAttribute(
-          "data-theme",
-          t === "dark" || t === "light"
-            ? t
-            : window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light"
-        );
+        document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light");
       } catch (_) {}
     </script>
   </head>

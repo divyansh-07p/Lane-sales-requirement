@@ -40,8 +40,7 @@ function shortDate(iso: string): { weekday: string; date: string; day: string } 
 
 function initialTheme(): "light" | "dark" {
   const stored = localStorage.getItem("lane-theme");
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return stored === "light" || stored === "dark" ? stored : "light";
 }
 
 function showDetailTitle(instructor: InstructorRow, windowTotal: number, days: number): string {
