@@ -280,10 +280,6 @@ export default function App() {
   }, [dates]);
   const activeMonth = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? "");
   const monthIdx = months.indexOf(activeMonth);
-  const goToday = () => {
-    setSelectedMonth(months[0] ?? "");
-    setDateIndex(0);
-  };
   const goPrev = () => {
     if (monthIdx > 0) {
       setSelectedMonth(months[monthIdx - 1]);
@@ -563,9 +559,6 @@ export default function App() {
         </div>
 
         <div className="cal-nav">
-          <button type="button" className="cal-btn today" onClick={goToday}>
-            Today
-          </button>
           <button
             type="button"
             className="cal-btn chev"
